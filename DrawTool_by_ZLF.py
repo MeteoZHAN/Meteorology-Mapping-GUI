@@ -11,7 +11,6 @@ from tkinter import filedialog,ttk
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
 from matplotlib.patches import PathPatch
-import matplotlib as mpl
 from PIL import Image, ImageTk
 import cartopy.io.shapereader as shpreader
 from scipy.interpolate import Rbf
@@ -20,8 +19,6 @@ import shapefile
 # import geopandas as gpd
 import pandas as pd
 from shapely.geometry import Polygon
-# import shapely.geometry as geometry
-
 import numpy as np
 import cartopy.crs as ccrs
 from io import BytesIO
@@ -39,7 +36,7 @@ window.minsize(800,400)
 menubar = tk.Menu(window)
 filemenu = tk.Menu(menubar,tearoff = 0)
 editmenu = tk.Menu(menubar,tearoff = 0)
-helpmenu = tk.Menu(menubar,tearoff = 0)
+aboutmenu = tk.Menu(menubar,tearoff = 0)
 
 def open_file(*args):
     global file_path, df, colname  #glabal作用是整个程序都存在这个变量，如果不加这句，只在open_file函数下有这个变量
@@ -92,7 +89,7 @@ def docopy(*args):
 
 def selected_cmap(*args):
     global color_mark
-    if btn10.get()=='jet':
+    if btn10.get()=='jet':        
         color_mark = 1
     elif btn10.get()=='rainbow':
         color_mark = 2
@@ -104,8 +101,8 @@ def selected_cmap(*args):
         color_mark = 5
     return color_mark
 
-# def rain_colors():
-#     return mpl.colors.LinearSegmentedColormap.from_list('cmap', ['#8B0000','#FFFFFF', '#FF0000','#98F5FF', '#00FF00', '#FF0000','#FFFF00'],256)    
+
+
 
 def draw_function():
     if btn7.get() == '默认':
@@ -120,6 +117,15 @@ def draw_function():
     else:
         mark3 = 1
         mmax = float(btn8.get())
+    #------------警告提示框---------
+    if mark1 == 0 and mark2 == 0 and mark3 == 0:
+        pass
+    elif mark1 == 0 and (mark2 == 1 or mark3 == 1):
+        tk.messagebox.showwarning('警告','色阶默认情况下，图例最小值和图例最大值均应为“默认”')
+        return
+    else:
+        tk.messagebox.showwarning('警告','色阶非默认情况下，需同时自定义色阶级数、图例最小值和图例最大值')
+        return
     
     path0 = 'DTool/dishi.shp'
 #    path1 = 'C:/Users/zhanLf/Desktop/Python/DTool/shengjie.shp'
@@ -179,7 +185,19 @@ def draw_function():
             pic = plt.contourf(olon, olat, rain_data_new, v, cmap = plt.cm.OrRd)
         cbar = plt.colorbar(pic)
         cbar.set_label(btn9.get(),fontproperties='SimHei') #图例label在右边
-    
+    # elif mark1 == 1 and mark2 == 0 and mark3 == 0 and btn10.get() != 'CMA_Rain':
+    #     # if color_mark == 1:
+    #     #     pic = plt.contourf(olon, olat, rain_data_new, mnum, cmap = plt.cm.jet)
+    #     # elif color_mark == 2:
+    #     #     pic = plt.contourf(olon, olat, rain_data_new, mnum, cmap = plt.cm.rainbow)
+    #     # elif color_mark == 3:
+    #     #     pic = plt.contourf(olon, olat, rain_data_new, mnum, cmap = plt.cm.gist_rainbow)
+    #     # elif color_mark == 4:
+    #     #     pic = plt.contourf(olon, olat, rain_data_new, mnum, cmap = plt.cm.OrRd)
+    #     # v = np.linspace(mmin, mmax, num = mnum, endpoint = True)
+    #     pic = plt.contourf(olon, olat, rain_data_new, mnum, cmap = plt.cm.jet)
+    #     cbar = plt.colorbar(pic)
+    #     cbar.set_label(btn9.get(),fontproperties='SimHei')
     elif btn10.get() == 'CMA_Rain':
         rain_levels = [0,0.1,10,25,50,100,250,2500]
         rain_colors = ['#FFFFFF','#A6F28F','#38A800','#61B8FF',
@@ -217,16 +235,29 @@ def draw_function():
     img = ImageTk.PhotoImage(wifi_img)
     window.img = img   # to prevent the image garbage collected.
     canvas.create_image(200,180, anchor = 'center',image = img)
-    
-    
+
+def introduction(): #软件介绍函数
+    # 弹出对话框
+    tk.messagebox.showinfo(title = '软件说明',message = 
+                          '功能：对接气候业务评价系统，实现业务快速绘图\n\
+\n插值方法：采用径向基函数插值方法 func=Rbf(x,y,z,function = \'linear\')\n\
+\n操作说明：载入评价系统生成的txt文件 --> 绘图设置 --> 绘图 --> 复制粘贴\t\t至Word\n\
+\n注意事项：1.若色阶级数选择默认，则图例最大值和图例最小值无需修改，保\t\t持默认；\
+否则，图例最大值和图例最小值均需自定义；\n\t2.shp文件应与该exe文件同目录')    
+
+def update(): #软件更新说明函数
+    tk.messagebox.showinfo(title = '更新说明',message = '暂无')
+   
 menubar.add_cascade(label='文件(F)', menu = filemenu)
 # filemenu.add_command(label='新建(N)', command = donothing)
 # filemenu.add_command(label='导入数据', command = donothing)
 # submenu = tk.Menu(filemenu,tearoff = 0)
 # filemenu.add_cascade(label='新建(N)',menu=submenu)
 menubar.add_cascade(label='编辑(E)',menu = editmenu)
-menubar.add_cascade(label='关于(A)',menu = helpmenu)
-
+menubar.add_cascade(label='关于(A)',menu = aboutmenu)
+aboutmenu.add_command(label='软件说明', command = introduction)
+aboutmenu.add_command(label='更新说明', command = update)
+window.config(menu = menubar)
 
 
 btn1 = tk.Button(window,text='载入文件...',command = open_file)
@@ -254,7 +285,7 @@ btn5['value'] = ('请选择...')
 btn5.current(0)   #默认值
 btn5.bind("<<ComboboxSelected>>",selectedcol)
 
-text2 = tk.Label(window,text='请设置图例级数：')
+text2 = tk.Label(window,text='请设置色阶级数：')
 text2.place(relx=30/800,rely=260/800)
 btn6 = ttk.Combobox(window,state='readonly')
 btn6.place(relx=140/800,rely=260/800,relwidth = 0.1)
@@ -315,5 +346,7 @@ def popupmenu(event):
 
 canvas.bind("<Button-3>", popupmenu)
 
-window.config(menu = menubar)
+
+
+
 window.mainloop()
