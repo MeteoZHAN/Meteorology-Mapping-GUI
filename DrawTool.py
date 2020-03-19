@@ -8,6 +8,7 @@ Created on Tue Dec 10 08:48:21 2019
 
 import tkinter as tk
 from tkinter import filedialog,ttk
+import tkinter.messagebox as tm
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
 from matplotlib.patches import PathPatch
@@ -118,10 +119,10 @@ def draw_function():
     if mark1 == 0 and mark2 == 0 and mark3 == 0:
         pass
     elif mark1 == 0 and (mark2 == 1 or mark3 == 1):
-        tk.messagebox.showwarning('警告','色阶默认情况下，图例最小值和图例最大值均应为“默认”')
+        tm.showwarning('警告','色阶默认情况下，图例最小值和图例最大值均应为“默认”')
         return
     else:
-        tk.messagebox.showwarning('警告','色阶非默认情况下，需同时自定义色阶级数、图例最小值和图例最大值')
+        tm.showwarning('警告','色阶非默认情况下，需同时自定义色阶级数、图例最小值和图例最大值')
         return
     
     path0 = 'DTool/dishi.shp'
@@ -205,9 +206,9 @@ def draw_function():
             cbar.set_label(btn9.get(),fontproperties='SimHei') #图例label在右边        
         except:
             if np.min(z) < 0:
-                tk.messagebox.showinfo(message='存在负数，超出降水图例范围！请换其他颜色样式')
+                tm.showinfo(message='存在负数，超出降水图例范围！请换其他颜色样式')
             elif np.max(z) > 2500:
-                tk.messagebox.showinfo(message='降水量过大，请何查数据！或请换其他颜色样式')  
+                tm.showinfo(message='降水量过大，请何查数据！或请换其他颜色样式')  
         # cbar.make_axes(locations='top')
         # cbar.ax.set_xlabel(btn9.get(),fontproperties='SimHei')
     else:
@@ -241,15 +242,15 @@ def draw_function():
 
 def introduction(): #软件介绍函数
     # 弹出对话框
-    tk.messagebox.showinfo(title = '软件说明',message = 
+    tm.showinfo(title = '软件说明',message = 
                           '功能：对接气候业务评价系统，实现业务快速绘图\n\
 \n插值方法：采用径向基函数插值方法 func=Rbf(x,y,z,function = \'linear\')\n\
-\n操作说明：载入评价系统生成的txt文件 --> 绘图设置 --> 绘图 --> 复制粘贴\t\t至Word\n\
-\n注意事项：1.若色阶级数选择默认，则图例最大值和图例最小值无需修改，保\t\t持默认；\
+\n操作说明：载入评价系统生成的txt文件 --> 绘图设置 --> 绘图 --> 复\t\t制粘贴至Word\n\
+\n注意事项：1.若色阶级数选择默认，则图例最大值和图例最小值无需修\t\t改，保持默认；\
 否则，图例最大值和图例最小值均需自定义；\n\t2.shp文件应与该exe文件同目录')    
 
 def update(): #软件更新说明函数
-    tk.messagebox.showinfo(title = '更新说明',message = '暂无')
+    tm.showinfo(title = '更新说明',message = '暂无')
    
 menubar.add_cascade(label='文件(F)', menu = filemenu)
 # filemenu.add_command(label='新建(N)', command = donothing)
