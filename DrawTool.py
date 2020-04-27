@@ -5,7 +5,6 @@ Created on Tue Dec 10 08:48:21 2019
 @author: ZhanLF
 """
 
-
 import tkinter as tk
 from tkinter import filedialog,ttk
 import tkinter.messagebox as tm
@@ -27,7 +26,7 @@ import win32clipboard
 
 
 # font_custum = FontProperties(fname=r"C:\WINDOWS\Fonts\simsun.ttc", size=6)
-# plt.rcParams['font.sans-serif'] = ['Yahei Mono'] # 用来正常显示中文字符
+plt.rcParams['font.sans-serif'] = ['STSong'] # 用来正常显示中文字符
 
 
 window = tk.Tk()
@@ -40,7 +39,7 @@ editmenu = tk.Menu(menubar,tearoff = 0)
 aboutmenu = tk.Menu(menubar,tearoff = 0)
 
 def open_file(*args):
-    global file_path, df, colname  #glabal作用是整个程序都存在这个变量，如果不加这句，只在open_file函数下有这个变量
+    global file_path, df, colname  # glabal作用是整个程序都存在这个变量，如果不加这句，只在open_file函数下有这个变量
     file_path = filedialog.askopenfilename() 
     df = pd.read_csv(file_path, sep=',',encoding = 'GB2312')
     colname = df.columns.values.tolist()
@@ -115,15 +114,18 @@ def draw_function():
     else:
         mark3 = 1
         mmax = float(btn8.get())
+    
     #------------警告提示框---------
     if mark1 == 0 and mark2 == 0 and mark3 == 0:
         pass
     elif mark1 == 0 and (mark2 == 1 or mark3 == 1):
-        tm.showwarning('警告','色阶默认情况下，图例最小值和图例最大值均应为“默认”')
+        tm.showwarning('警告','色阶级数默认情况下，图例最小值和图例最大值均应为“默认”。')
         return
+    elif mark1 == 1 and mark2 == 1 and mark3 == 1:
+        pass
     else:
-        tm.showwarning('警告','色阶非默认情况下，需同时自定义色阶级数、图例最小值和图例最大值')
-        return
+        tm.showinfo('提示','色阶级数非默认情况下，需同时自定义设置图例最小值和图例最大值；否则图例最大值和最小值以默认值绘出。')
+        pass
     
     path0 = 'DTool/dishi.shp'
 #    path1 = 'C:/Users/zhanLf/Desktop/Python/DTool/shengjie.shp'
@@ -150,7 +152,6 @@ def draw_function():
     # 空间插值计算
     func = Rbf(x,y,z,function = 'linear')
     rain_data_new = func(olon,olat)
-    
     
     ax = plt.axes(projection=ccrs.PlateCarree())
     box = [113.4,118.7,24.1,30.4]
@@ -180,8 +181,10 @@ def draw_function():
             pic = plt.contourf(olon, olat, rain_data_new, v, cmap = plt.cm.gist_rainbow)
         elif color_mark == 4:
             pic = plt.contourf(olon, olat, rain_data_new, v, cmap = plt.cm.OrRd)
-        cbar = plt.colorbar(pic)
-        cbar.set_label(btn9.get(),fontproperties='SimHei') #图例label在右边
+        # cbar = plt.colorbar(pic)
+        # cbar.set_label(btn9.get(),fontproperties='STSong') #图例label在右边
+        
+        
     # elif mark1 == 1 and mark2 == 0 and mark3 == 0 and btn10.get() != 'CMA_Rain':
     #     # if color_mark == 1:
     #     #     pic = plt.contourf(olon, olat, rain_data_new, mnum, cmap = plt.cm.jet)
@@ -206,9 +209,9 @@ def draw_function():
             cbar.set_label(btn9.get(),fontproperties='SimHei') #图例label在右边        
         except:
             if np.min(z) < 0:
-                tm.showinfo(message='存在负数，超出降水图例范围！请换其他颜色样式')
+                tm.showinfo(message='存在负数，超出降水图例范围！请换其他颜色样式。')
             elif np.max(z) > 2500:
-                tm.showinfo(message='降水量过大，请何查数据！或请换其他颜色样式')  
+                tm.showinfo(message='降水量过大，请何查数据！或请换其他颜色样式。')  
         # cbar.make_axes(locations='top')
         # cbar.ax.set_xlabel(btn9.get(),fontproperties='SimHei')
     else:
@@ -221,24 +224,31 @@ def draw_function():
         elif color_mark == 4:
             pic = plt.contourf(olon, olat, rain_data_new, cmap = plt.cm.OrRd)
         cbar = plt.colorbar(pic)
-        cbar.set_label(btn9.get(),fontproperties='SimHei') #图例label在右边    
+        # cbar.set_label(btn9.get(),fontproperties='SimHei') #图例label在右边  
+        # plt.text(120.2, 30.35, btn9.get(), size = 8, weight = 2)
     
             
     for collection in pic.collections:
         collection.set_clip_path(patch)#设置显示区域
     
-    plt.scatter(x, y, marker = '.', c = 'k', s = 10)
+    plt.scatter(x, y, marker = '.', c = 'k', s = 10) #绘制站点
+    
+    # 添加显示站名、数值等标签
+    for i in range(len(z)):
+        plt.text(x[i],y[i]+0.05,df['站名'][i],size = 5.5, weight = 2, wrap = True)
+    # 添加单位标注
+    plt.text(119.2, 30.6, btn9.get(), size = 8, weight = 2)
     
     # cbar.ax.set_xlabel(btn9.get(),fontproperties='SimHei') #图例label在下边
     
     fig = plt.gcf()
-    fig.set_size_inches(5,4)
-    plt.savefig('pics.png',bbox_inches = 'tight')
+    fig.set_size_inches(6,4) #设置图片大小
+    plt.savefig('pics.png', bbox_inches = 'tight')
     plt.close()
     wifi_img = Image.open('pics.png')
     img = ImageTk.PhotoImage(wifi_img)
     window.img = img   # to prevent the image garbage collected.
-    canvas.create_image(200,180, anchor = 'center',image = img)
+    canvas.create_image(200,180, anchor = 'center',image = img) #设置生成的图片位置
 
 def introduction(): #软件介绍函数
     # 弹出对话框
