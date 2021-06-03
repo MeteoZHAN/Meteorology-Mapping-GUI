@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Dec 10 08:48:21 2019
+Updated on 2021.06.03
 
 @author: ZhanLF
 """
@@ -24,11 +24,11 @@ import cartopy.crs as ccrs
 from io import BytesIO
 import win32clipboard
 
-# font_custum = FontProperties(fname=r"C:\WINDOWS\Fonts\simsun.ttc", size=6)
 plt.rcParams['font.sans-serif'] = ['STSong']  # 用来正常显示中文字符
+plt.rcParams['axes.unicode_minus'] = False  # 正常显示负号
 
 window = tk.Tk()
-window.title('空间插值绘图小工具 V1.1')
+window.title('空间插值绘图小工具 V1.2')
 window.geometry('800x400+400+200')
 window.minsize(800, 400)
 menubar = tk.Menu(window)
@@ -190,7 +190,7 @@ def draw_function():
             pic = plt.contourf(olon, olat, rain_data_new, v, cmap=plt.cm.gist_rainbow)
         elif color_mark == 4:
             pic = plt.contourf(olon, olat, rain_data_new, v, cmap=plt.cm.OrRd)
-        cbar = plt.colorbar(pic)
+        # cbar = plt.colorbar(pic)
         # cbar.set_label(btn9.get(),fontproperties='STSong') #图例label在右边
 
 
@@ -215,7 +215,7 @@ def draw_function():
                            '#0000FF', '#FA00FA', '#730000', '#400000']
             pic = plt.contourf(olon, olat, rain_data_new, levels=rain_levels, colors=rain_colors)
             cbar = plt.colorbar(pic, ticks=[0, 0.1, 10, 25, 50, 100, 250])
-            cbar.set_label(btn9.get(), fontproperties='SimHei')  # 图例label在右边
+            # cbar.set_label(btn9.get(), fontproperties='SimHei')  # 图例label在右边
         except:
             if np.min(z) < 0:
                 tm.showinfo(message='存在负数，超出降水图例范围！请换其他颜色样式。')
@@ -232,7 +232,7 @@ def draw_function():
             pic = plt.contourf(olon, olat, rain_data_new, cmap=plt.cm.gist_rainbow)
         elif color_mark == 4:
             pic = plt.contourf(olon, olat, rain_data_new, cmap=plt.cm.OrRd)
-        cbar = plt.colorbar(pic)
+        # cbar = plt.colorbar(pic)
         # cbar.set_label(btn9.get(),fontproperties='SimHei') #图例label在右边  
         # plt.text(120.2, 30.35, btn9.get(), size = 8, weight = 2)
 
@@ -245,12 +245,13 @@ def draw_function():
     for i in range(len(z)):
         plt.text(x[i], y[i] + 0.05, df['站名'][i], size=5.5, weight=2, wrap=True)
     # 添加单位标注
-    plt.text(119.2, 30.6, btn9.get(), size=8, weight=2)
-
-    # cbar.ax.set_xlabel(btn9.get(),fontproperties='SimHei') #图例label在下边
-
+    plt.text(117.75, 27.1, btn9.get(), size=8, weight=2)
     fig = plt.gcf()
     fig.set_size_inches(6, 4)  # 设置图片大小
+    plt.axis('off')  # 去除四边框框
+    position = fig.add_axes([0.65, 0.15, 0.03, 0.3])  # 位置
+    plt.colorbar(pic, cax=position, orientation='vertical')
+
     plt.savefig('pics.png', bbox_inches='tight')
     plt.close()
     wifi_img = Image.open('pics.png')
@@ -262,11 +263,11 @@ def draw_function():
 def introduction():  # 软件介绍函数
     # 弹出对话框
     tm.showinfo(title='软件说明', message=
-    '功能：对接气候业务评价系统，实现业务快速绘图\n\
-\n插值方法：采用径向基函数插值方法 func=Rbf(x,y,z,function = \'linear\')\n\
-\n操作说明：载入评价系统生成的txt文件 --> 绘图设置 --> 绘图 --> 复\t\t制粘贴至Word\n\
-\n注意事项：1.若色阶级数选择默认，则图例最大值和图例最小值无需修\t\t改，保持默认；\
-否则，图例最大值和图例最小值均需自定义；\n\t2.shp文件应与该exe文件同目录')
+    '功能：对接气候业务评价系统，实现业务快速绘图。\n\
+\n插值方法：采用径向基函数插值方法\n\
+\n操作说明：载入评价系统生成的txt文件 --> 绘图设置 --> 绘图 --> 复制粘贴至Word\n\
+\n注意事项：1.若色阶级数选择默认，则图例最大值和图例最小值无需修改，保持默认；\
+否则，图例最大值和图例最小值均需自定义；2.shp文件应与该exe文件同目录')
 
 
 def update_message():  # 软件更新说明函数
