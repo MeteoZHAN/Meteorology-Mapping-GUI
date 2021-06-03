@@ -28,7 +28,7 @@ import win32clipboard
 plt.rcParams['font.sans-serif'] = ['STSong']  # 用来正常显示中文字符
 
 window = tk.Tk()
-window.title('空间插值绘图小工具 V1.0')
+window.title('空间插值绘图小工具 V1.1')
 window.geometry('800x400+400+200')
 window.minsize(800, 400)
 menubar = tk.Menu(window)
@@ -269,8 +269,8 @@ def introduction():  # 软件介绍函数
 否则，图例最大值和图例最小值均需自定义；\n\t2.shp文件应与该exe文件同目录')
 
 
-def update():  # 软件更新说明函数
-    tm.showinfo(title='更新说明', message='暂无')
+def update_message():  # 软件更新说明函数
+    tm.showinfo(title='更新说明', message='增强了对不同数据格式的兼容性')
 
 
 if __name__ == '__main__':
@@ -282,7 +282,7 @@ if __name__ == '__main__':
     menubar.add_cascade(label='编辑(E)', menu=editmenu)
     menubar.add_cascade(label='关于(A)', menu=aboutmenu)
     aboutmenu.add_command(label='软件说明', command=introduction)
-    aboutmenu.add_command(label='更新说明', command=update)
+    aboutmenu.add_command(label='更新说明', command=update_message)
     window.config(menu=menubar)
 
     btn1 = tk.Button(window, text='载入文件...', command=open_file)
