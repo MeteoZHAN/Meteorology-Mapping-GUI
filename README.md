@@ -10,3 +10,4 @@ temp.txt为测试文件
 1. 增强了对数据header的兼容性
 2. 去除axis
 3. 美化colorbar
+4. 增加了负号显示功能
