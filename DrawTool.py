@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Updated on 2021.06.03
+Updated on 2021.06.05
 
 @author: ZhanLF
 """
@@ -16,19 +16,19 @@ import cartopy.io.shapereader as shpreader
 from scipy.interpolate import Rbf
 from shapely.ops import cascaded_union
 import shapefile
-# import geopandas as gpd
 import pandas as pd
 from shapely.geometry import Polygon
 import numpy as np
 import cartopy.crs as ccrs
 from io import BytesIO
 import win32clipboard
+from pykrige import OrdinaryKriging
 
 plt.rcParams['font.sans-serif'] = ['STSong']  # 用来正常显示中文字符
 plt.rcParams['axes.unicode_minus'] = False  # 正常显示负号
 
 window = tk.Tk()
-window.title('空间插值绘图小工具 V1.2')
+window.title('空间插值绘图小工具 V1.4')
 window.geometry('800x400+400+200')
 window.minsize(800, 400)
 menubar = tk.Menu(window)
@@ -37,15 +37,26 @@ editmenu = tk.Menu(menubar, tearoff=0)
 aboutmenu = tk.Menu(menubar, tearoff=0)
 
 
+def conver_titles(file_path):  # 格式转换（系统生成的titles与数据不匹配）
+    global df
+    df0 = pd.read_csv(file_path, sep=',', encoding='GB2312')
+    df1 = pd.read_csv(file_path, sep=',', encoding='GB2312', header=1)
+    title_name = list(df0.columns)
+    title_name.extend(['Unnamed' + str(i) for i in range(df1.shape[1] - len(title_name))])
+    df = pd.read_csv(file_path, sep=',', encoding='GB2312', header=0, names=title_name)
+    return df
+
+
 def open_file(*args):
-    global file_path, df, colname  # glabal作用是整个程序都存在这个变量，如果不加这句，只在open_file函数下有这个变量
+    global file_path, colname  # glabal作用是整个程序都存在这个变量，如果不加这句，只在open_file函数下有这个变量
     file_path = filedialog.askopenfilename()
-    df = pd.read_csv(file_path, sep=',', encoding='GB2312')
-    colname = df.columns.values.tolist()
+    conver_titles(file_path)
+    df_temp = pd.read_csv(file_path, sep=',', encoding='GB2312')
+    colname = df_temp.columns.values.tolist()
     colname.insert(0, '请选择...')
-    btn5['value'] = colname
-    btn5.current(0)  # 默认值
-    return file_path, df, colname
+    btn_sectdata['value'] = colname
+    btn_sectdata.current(0)  # 默认值
+    return file_path, colname
 
 
 def donothing():
@@ -54,23 +65,24 @@ def donothing():
 
 def selectedcol(*args):
     global z
-    z = df[btn5.get()]
+    z = df[btn_sectdata.get()]
     return z
 
 
-def jishu(*args):
-    global mark1, mnum
-    if btn6.get() == '默认':
-        mark1 = 0
-        mnum = None
+def color_levels(*args):
+    global mark1_1, mnum_1, markclick
+    markclick = 1
+    if btn_sectlevels.get() == '默认':
+        mark1_1 = 0
+        mnum_1 = None
+        print('默认')
     else:
-        mark1 = 1
-        mnum = int(btn6.get()) + 1
-    return mark1, mnum
+        mark1_1 = 1
+        mnum_1 = int(btn_sectlevels.get()) + 1
+    return mark1_1, mnum_1, markclick
 
 
 # ----------实现复制到系统剪切板功能----------------
-
 def send_msg_to_clip(type_data, msg):
     win32clipboard.OpenClipboard()
     win32clipboard.EmptyClipboard()
@@ -93,33 +105,39 @@ def docopy(*args):
 
 def selected_cmap(*args):
     global color_mark
-    if btn10.get() == 'jet':
+    if btn_style.get() == 'jet':
         color_mark = 1
-    elif btn10.get() == 'rainbow':
+    elif btn_style.get() == 'rainbow':
         color_mark = 2
-    elif btn10.get() == 'gist_rainbow':
+    elif btn_style.get() == 'gist_rainbow':
         color_mark = 3
-    elif btn10.get() == 'OrRd':
+    elif btn_style.get() == 'OrRd':
         color_mark = 4
-    elif btn10.get() == 'CMA_Rain':
+    elif btn_style.get() == 'CMA_Rain':
         color_mark = 5
     return color_mark
 
 
 def draw_function():
-    if btn7.get() == '默认':
+    if markclick == 0:  # mclick 如果不存在，则鼠标未点击色阶级数，则给mark1和mnum赋初始值
+        mark1 = 0
+        mnum = None
+    else:
+        mark1 = mark1_1
+        mnum = mnum_1
+    if btn_legendmin.get() == '默认':
         mark2 = 0
         mmin = None
     else:
         mark2 = 1
-        mmin = float(btn7.get())
-    if btn8.get() == '默认':
+        mmin = float(btn_legendmin.get())
+    if btn_legendmax.get() == '默认':
         mark3 = 0
         mmax = None
     else:
         mark3 = 1
-        mmax = float(btn8.get())
-
+        mmax = float(btn_legendmax.get())
+    print('mark1=',mark1)
     # ------------警告提示框---------
     if mark1 == 0 and mark2 == 0 and mark3 == 0:
         pass
@@ -133,9 +151,6 @@ def draw_function():
         pass
 
     path0 = 'DTool/dishi.shp'
-    #    path1 = 'C:/Users/zhanLf/Desktop/Python/DTool/shengjie.shp'
-    #    a = gpd.GeoDataFrame.from_file(r'C:\Users\zhanlf\Desktop\Python\DTool\dishi.shp')
-
     file = shapefile.Reader(path0)
     rec = file.shapeRecords()
     polygon = list()
@@ -148,19 +163,19 @@ def draw_function():
     ext.append(ext[0])  # 起始点
     path = Path(np.array(ext), codes)
     patch = PathPatch(path, facecolor='None')
-    df0 = pd.read_csv(file_path, sep=',', encoding='GB2312')
-    df1 = pd.read_csv(file_path, sep=',', encoding='GB2312', header=1)
-    title_name = list(df0.columns)
-    title_name.extend(['Unnamed' + str(i) for i in range(df1.shape[1] - len(title_name))])
-    df = pd.read_csv(file_path, sep=',', encoding='GB2312', header=0, names=title_name)
+
     x, y = df['经度'], df['纬度']
     xi = np.arange(113, 118.5, 0.01)
     yi = np.arange(24, 31, 0.01)
     olon, olat = np.meshgrid(xi, yi)
 
-    # 空间插值计算
-    func = Rbf(x, y, z, function='linear')
-    rain_data_new = func(olon, olat)
+    # Rbf空间插值
+    # func = Rbf(x, y, z, function='linear')
+    # oz = func(olon, olat)
+
+    # 克里金插值
+    ok = OrdinaryKriging(x, y, z, variogram_model='linear')
+    oz, ss = ok.execute('grid', xi, yi)
 
     ax = plt.axes(projection=ccrs.PlateCarree())
     box = [113.4, 118.7, 24.1, 30.4]
@@ -168,53 +183,28 @@ def draw_function():
     ax.add_patch(patch)
     shp = list(shpreader.Reader(path0).geometries())
     ax.add_geometries(shp, ccrs.PlateCarree(), edgecolor='black',
-                      facecolor='none', alpha=1, linewidth=0.5)  # 加底图
-
-    '''    不可取方法，太耗时间
-    #for i in range(0,olat.shape[1]):
-    #    print(i)
-    #    for j in range(0,olat.shape[0]):
-    #        if geometry.Point(np.array([olon[0,i],olat[j,0]])).within(geometry.shape(shps)): 
-    #            continue
-    #        else:
-    #            rain_data_new[j,i] = np.nan
-    '''
-
-    if mark1 == 1 and mark2 == 1 and mark3 == 1 and btn10.get() != 'CMA_Rain':
+                      facecolor='none', alpha=0.3, linewidth=0.5)  # 加底图
+    if mark1 == 1 and mark2 == 1 and mark3 == 1 and btn_style.get() != 'CMA_Rain':
         v = np.linspace(mmin, mmax, num=mnum, endpoint=True)  # 设置显示数值范围和级数
         if color_mark == 1:
-            pic = plt.contourf(olon, olat, rain_data_new, v, cmap=plt.cm.jet)
+            pic = plt.contourf(olon, olat, oz, v, cmap=plt.cm.jet)
         elif color_mark == 2:
-            pic = plt.contourf(olon, olat, rain_data_new, v, cmap=plt.cm.rainbow)
+            pic = plt.contourf(olon, olat, oz, v, cmap=plt.cm.rainbow)
         elif color_mark == 3:
-            pic = plt.contourf(olon, olat, rain_data_new, v, cmap=plt.cm.gist_rainbow)
+            pic = plt.contourf(olon, olat, oz, v, cmap=plt.cm.gist_rainbow)
         elif color_mark == 4:
-            pic = plt.contourf(olon, olat, rain_data_new, v, cmap=plt.cm.OrRd)
-        # cbar = plt.colorbar(pic)
-        # cbar.set_label(btn9.get(),fontproperties='STSong') #图例label在右边
+            pic = plt.contourf(olon, olat, oz, v, cmap=plt.cm.OrRd)
 
-
-    # elif mark1 == 1 and mark2 == 0 and mark3 == 0 and btn10.get() != 'CMA_Rain':
-    #     # if color_mark == 1:
-    #     #     pic = plt.contourf(olon, olat, rain_data_new, mnum, cmap = plt.cm.jet)
-    #     # elif color_mark == 2:
-    #     #     pic = plt.contourf(olon, olat, rain_data_new, mnum, cmap = plt.cm.rainbow)
-    #     # elif color_mark == 3:
-    #     #     pic = plt.contourf(olon, olat, rain_data_new, mnum, cmap = plt.cm.gist_rainbow)
-    #     # elif color_mark == 4:
-    #     #     pic = plt.contourf(olon, olat, rain_data_new, mnum, cmap = plt.cm.OrRd)
-    #     # v = np.linspace(mmin, mmax, num = mnum, endpoint = True)
-    #     pic = plt.contourf(olon, olat, rain_data_new, mnum, cmap = plt.cm.jet)
-    #     cbar = plt.colorbar(pic)
-    #     cbar.set_label(btn9.get(),fontproperties='SimHei')
-    elif btn10.get() == 'CMA_Rain':
+    elif btn_style.get() == 'CMA_Rain':
         # 应加入超出levels的提示
         try:
             rain_levels = [0, 0.1, 10, 25, 50, 100, 250, 2500]
             rain_colors = ['#FFFFFF', '#A6F28F', '#38A800', '#61B8FF',
                            '#0000FF', '#FA00FA', '#730000', '#400000']
-            pic = plt.contourf(olon, olat, rain_data_new, levels=rain_levels, colors=rain_colors)
-            cbar = plt.colorbar(pic, ticks=[0, 0.1, 10, 25, 50, 100, 250])
+            pic = plt.contourf(olon, olat, oz, levels=rain_levels, colors=rain_colors)
+            # cbar = plt.colorbar(pic, ticks=[0, 0.1, 10, 25, 50, 100, 250])
+            # position = fig.add_axes([0.65, 0.15, 0.03, 0.3])  # 位置
+            # plt.colorbar(pic, ticks=[0, 0.1, 10, 25, 50, 100, 250], cax=position, orientation='vertical')
             # cbar.set_label(btn9.get(), fontproperties='SimHei')  # 图例label在右边
         except:
             if np.min(z) < 0:
@@ -225,16 +215,15 @@ def draw_function():
         # cbar.ax.set_xlabel(btn9.get(),fontproperties='SimHei')
     else:
         if color_mark == 1:
-            pic = plt.contourf(olon, olat, rain_data_new, cmap=plt.cm.jet)
+            pic = plt.contourf(olon, olat, oz, cmap=plt.cm.jet)
         elif color_mark == 2:
-            pic = plt.contourf(olon, olat, rain_data_new, cmap=plt.cm.rainbow)
+            pic = plt.contourf(olon, olat, oz, cmap=plt.cm.rainbow)
         elif color_mark == 3:
-            pic = plt.contourf(olon, olat, rain_data_new, cmap=plt.cm.gist_rainbow)
+            pic = plt.contourf(olon, olat, oz, cmap=plt.cm.gist_rainbow)
         elif color_mark == 4:
-            pic = plt.contourf(olon, olat, rain_data_new, cmap=plt.cm.OrRd)
+            pic = plt.contourf(olon, olat, oz, cmap=plt.cm.OrRd)
         # cbar = plt.colorbar(pic)
-        # cbar.set_label(btn9.get(),fontproperties='SimHei') #图例label在右边  
-        # plt.text(120.2, 30.35, btn9.get(), size = 8, weight = 2)
+        # cbar.set_label(btn9.get(),fontproperties='SimHei') #图例label在右边
 
     for collection in pic.collections:
         collection.set_clip_path(patch)  # 设置显示区域
@@ -245,12 +234,16 @@ def draw_function():
     for i in range(len(z)):
         plt.text(x[i], y[i] + 0.05, df['站名'][i], size=5.5, weight=2, wrap=True)
     # 添加单位标注
-    plt.text(117.75, 27.1, btn9.get(), size=8, weight=2)
+    plt.text(117.75, 27.1, btn_legendunit.get(), size=8, weight=2)
     fig = plt.gcf()
     fig.set_size_inches(6, 4)  # 设置图片大小
     plt.axis('off')  # 去除四边框框
-    position = fig.add_axes([0.65, 0.15, 0.03, 0.3])  # 位置
-    plt.colorbar(pic, cax=position, orientation='vertical')
+    if btn_style.get() == 'CMA_Rain':
+        position = fig.add_axes([0.65, 0.15, 0.03, 0.3])  # 位置
+        plt.colorbar(pic, ticks=[0, 0.1, 10, 25, 50, 100, 250], cax=position, orientation='vertical')
+    else:
+        position = fig.add_axes([0.65, 0.15, 0.03, 0.3])  # 位置
+        plt.colorbar(pic, cax=position, orientation='vertical')
 
     plt.savefig('pics.png', bbox_inches='tight')
     plt.close()
@@ -263,15 +256,15 @@ def draw_function():
 def introduction():  # 软件介绍函数
     # 弹出对话框
     tm.showinfo(title='软件说明', message=
-    '功能：对接气候业务评价系统，实现业务快速绘图。\n\
-\n插值方法：采用径向基函数插值方法\n\
+    '功能：对接气候评价业务系统，实现数据快速绘图。\n\
+\n插值方法：采用克里金插值方法\n\
 \n操作说明：载入评价系统生成的txt文件 --> 绘图设置 --> 绘图 --> 复制粘贴至Word\n\
 \n注意事项：1.若色阶级数选择默认，则图例最大值和图例最小值无需修改，保持默认；\
 否则，图例最大值和图例最小值均需自定义；2.shp文件应与该exe文件同目录')
 
 
 def update_message():  # 软件更新说明函数
-    tm.showinfo(title='更新说明', message='增强了对不同数据格式的兼容性')
+    tm.showinfo(title='更新说明', message='V1.3版本增强了对不同数据格式的兼容性，插值方法修改为克里金插值')
 
 
 if __name__ == '__main__':
@@ -286,75 +279,67 @@ if __name__ == '__main__':
     aboutmenu.add_command(label='更新说明', command=update_message)
     window.config(menu=menubar)
 
-    btn1 = tk.Button(window, text='载入文件...', command=open_file)
+    btn_input = tk.Button(window, text='载入文件...', command=open_file)
     # btn1.grid(row = 0,column = 110,ipadx=20,ipady=10)
     # btn1.place(x=100,y=100, width = 70, height= 50)
-    btn1.place(relx=100 / 800, rely=30 / 800, relwidth=0.1, relheight=0.1)
+    btn_input.place(relx=100 / 800, rely=30 / 800, relwidth=0.1, relheight=0.1)
 
-    btn2 = tk.Button(window, text='绘图', command=draw_function)
+    btn_draw = tk.Button(window, text='绘图', command=draw_function)
     # btn2.grid(row = 1,column = 111,columnspan = 2,ipadx=20,ipady=10)
-    btn2.place(relx=100 / 800, rely=670 / 800, relwidth=0.1, relheight=0.1)
-
-    # btn3 = tk.Radiobutton(window,text='jet')
-    # btn3.place(relx=50/800,rely=150/800)
-
-    # btn4 = tk.Radiobutton(window,text='bbbbb')
-    # btn4.place(relx=50/800,rely=200/800)
+    btn_draw.place(relx=100 / 800, rely=670 / 800, relwidth=0.1, relheight=0.1)
 
     text1 = tk.Label(window, text='请选择插值要素：')
     text1.place(relx=30 / 800, rely=180 / 800)
-    btn5 = ttk.Combobox(window, state='readonly')
-    btn5.place(relx=140 / 800, rely=180 / 800, relwidth=0.1)
-    btn5['value'] = ('请选择...')
-    btn5.current(0)  # 默认值
-    btn5.bind("<<ComboboxSelected>>", selectedcol)
+    btn_sectdata = ttk.Combobox(window, state='readonly')
+    btn_sectdata.place(relx=140 / 800, rely=180 / 800, relwidth=0.1)
+    btn_sectdata['value'] = ('请选择...')
+    btn_sectdata.current(0)  # 默认值
+    btn_sectdata.bind("<<ComboboxSelected>>", selectedcol)
 
     text2 = tk.Label(window, text='请设置色阶级数：')
     text2.place(relx=30 / 800, rely=260 / 800)
-    btn6 = ttk.Combobox(window, state='readonly')
-    btn6.place(relx=140 / 800, rely=260 / 800, relwidth=0.1)
-    btn6['value'] = ('请选择...', '默认', '3', '4', '5', '6', '7', '8', '9', '10')
-    btn6.current(0)  # 默认值
-    btn6.bind("<<ComboboxSelected>>", jishu)
+    markclick = 0
+    print(markclick)
+    btn_sectlevels = ttk.Combobox(window, state='readonly')
+    btn_sectlevels.place(relx=140 / 800, rely=260 / 800, relwidth=0.1)
+    # btn_levels['value'] = ('请选择...', '默认', '3', '4', '5', '6', '7', '8', '9', '10', '11')
+    btn_sectlevels['value'] = ('默认', '3', '4', '5', '6', '7', '8', '9', '10', '11')
+    btn_sectlevels.current(0)  # 默认值
+    # btn_sectlevels.set('默认')
+    btn_sectlevels.bind("<<ComboboxSelected>>", color_levels)
 
     text3 = tk.Label(window, text='请输入图例最小值：')
     text3.place(relx=30 / 800, rely=340 / 800)
-    # btn7 = ttk.Combobox(window)
-    # btn7.place(relx=130/800,rely=460/800,relwidth = 0.1)
-    # btn7['value'] = ('默认','-8')
-    # # btn7.current(0)#默认值
-    # btn7.bind("<<ComboboxSelected>>",minvalue)
     entry_var7 = tk.StringVar()
-    btn7 = ttk.Entry(window, textvariable=entry_var7)
-    btn7.place(relx=140 / 800, rely=340 / 800, relwidth=0.1)
+    btn_legendmin = ttk.Entry(window, textvariable=entry_var7)
+    btn_legendmin.place(relx=140 / 800, rely=340 / 800, relwidth=0.1)
     entry_var7.set('默认')
+    # if btn_sectlevels.get() == '默认':
+    #     entry_var7.set('默认')
 
     text4 = tk.Label(window, text='请输入图例最大值：')
     text4.place(relx=30 / 800, rely=420 / 800)
-    # btn8 = ttk.Combobox(window)
-    # btn8.place(relx=130/800,rely=540/800,relwidth = 0.1)
-    # btn8['value'] = ('默认','-5')
-    # # btn8.current(0)#默认值
-    # btn8.bind("<<ComboboxSelected>>",maxvalue)
     entry_var8 = tk.StringVar()
-    btn8 = ttk.Entry(window, textvariable=entry_var8)
-    btn8.place(relx=140 / 800, rely=420 / 800, relwidth=0.1)
+    btn_legendmax = ttk.Entry(window, textvariable=entry_var8)
+    btn_legendmax.place(relx=140 / 800, rely=420 / 800, relwidth=0.1)
     entry_var8.set('默认')
+    if btn_sectlevels.get() == '默认':
+        entry_var8.set('默认')
 
     text5 = tk.Label(window, text='请输入图例单位：')
     text5.place(relx=30 / 800, rely=500 / 800)
     entry_var9 = tk.StringVar()
-    btn9 = ttk.Entry(window, textvariable=entry_var9)
-    btn9.place(relx=140 / 800, rely=500 / 800, relwidth=0.1)
+    btn_legendunit = ttk.Entry(window, textvariable=entry_var9)
+    btn_legendunit.place(relx=140 / 800, rely=500 / 800, relwidth=0.1)
     entry_var9.set('(℃)')
 
     text6 = tk.Label(window, text='请选择颜色样式：')
     text6.place(relx=30 / 800, rely=580 / 800)
-    btn10 = ttk.Combobox(window, state='readonly')
-    btn10.place(relx=140 / 800, rely=580 / 800, relwidth=0.1)
-    btn10['value'] = ('请选择...', 'CMA_Rain', 'jet', 'rainbow', 'gist_rainbow', 'OrRd')
-    btn10.current(0)  # 默认值
-    btn10.bind("<<ComboboxSelected>>", selected_cmap)
+    btn_style = ttk.Combobox(window, state='readonly')
+    btn_style.place(relx=140 / 800, rely=580 / 800, relwidth=0.1)
+    btn_style['value'] = ('请选择...', 'CMA_Rain', 'jet', 'rainbow', 'gist_rainbow', 'OrRd')
+    btn_style.current(0)  # 默认值
+    btn_style.bind("<<ComboboxSelected>>", selected_cmap)
 
     # 画布设置
     canvas = tk.Canvas(window, bg='white')
