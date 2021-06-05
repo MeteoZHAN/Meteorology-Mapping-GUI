@@ -11,3 +11,5 @@ temp.txt为测试文件
 2. 去除axis
 3. 美化colorbar
 4. 增加了负号显示功能
+## 2021.06.05 Updated to V1.4
+简化色阶级数选择操作
