@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Updated on 2021.06.05
+Updated on 2021.06.07
 
 @author: ZhanLF
 """
@@ -28,7 +28,7 @@ plt.rcParams['font.sans-serif'] = ['STSong']  # 用来正常显示中文字符
 plt.rcParams['axes.unicode_minus'] = False  # 正常显示负号
 
 window = tk.Tk()
-window.title('空间插值绘图小工具 V1.4')
+window.title('空间插值绘图小工具 V1.4.1')
 window.geometry('800x400+400+200')
 window.minsize(800, 400)
 menubar = tk.Menu(window)
@@ -75,7 +75,7 @@ def color_levels(*args):
     if btn_sectlevels.get() == '默认':
         mark1_1 = 0
         mnum_1 = None
-        print('默认')
+
     else:
         mark1_1 = 1
         mnum_1 = int(btn_sectlevels.get()) + 1
@@ -137,7 +137,7 @@ def draw_function():
     else:
         mark3 = 1
         mmax = float(btn_legendmax.get())
-    print('mark1=',mark1)
+
     # ------------警告提示框---------
     if mark1 == 0 and mark2 == 0 and mark3 == 0:
         pass
@@ -256,7 +256,7 @@ def draw_function():
 def introduction():  # 软件介绍函数
     # 弹出对话框
     tm.showinfo(title='软件说明', message=
-    '功能：对接气候评价业务系统，实现数据快速绘图。\n\
+    '功能：对接气候评价业务系统，实现快速绘图。\n\
 \n插值方法：采用克里金插值方法\n\
 \n操作说明：载入评价系统生成的txt文件 --> 绘图设置 --> 绘图 --> 复制粘贴至Word\n\
 \n注意事项：1.若色阶级数选择默认，则图例最大值和图例最小值无需修改，保持默认；\
@@ -299,7 +299,7 @@ if __name__ == '__main__':
     text2 = tk.Label(window, text='请设置色阶级数：')
     text2.place(relx=30 / 800, rely=260 / 800)
     markclick = 0
-    print(markclick)
+
     btn_sectlevels = ttk.Combobox(window, state='readonly')
     btn_sectlevels.place(relx=140 / 800, rely=260 / 800, relwidth=0.1)
     # btn_levels['value'] = ('请选择...', '默认', '3', '4', '5', '6', '7', '8', '9', '10', '11')
