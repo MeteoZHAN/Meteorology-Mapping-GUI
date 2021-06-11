@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Updated on 2021.06.07
-
+Updated on 2021.06.11
 @author: ZhanLF
 """
 
@@ -28,7 +27,7 @@ plt.rcParams['font.sans-serif'] = ['STSong']  # 用来正常显示中文字符
 plt.rcParams['axes.unicode_minus'] = False  # 正常显示负号
 
 window = tk.Tk()
-window.title('空间插值绘图小工具 V1.4.1')
+window.title('江西省气象空间插值绘图软件 V1.5')
 window.geometry('800x400+400+200')
 window.minsize(800, 400)
 menubar = tk.Menu(window)
@@ -100,7 +99,7 @@ def paste_img(file_img):
 
 
 def docopy(*args):
-    paste_img('pics.png')
+    paste_img('pics_dpi300.png')
 
 
 def selected_cmap(*args):
@@ -245,9 +244,10 @@ def draw_function():
         position = fig.add_axes([0.65, 0.15, 0.03, 0.3])  # 位置
         plt.colorbar(pic, cax=position, orientation='vertical')
 
-    plt.savefig('pics.png', bbox_inches='tight')
+    plt.savefig('pics_dpi100.png', dpi=100, bbox_inches='tight')
+    plt.savefig('pics_dpi300.png', dpi=300, bbox_inches='tight')
     plt.close()
-    wifi_img = Image.open('pics.png')
+    wifi_img = Image.open('pics_dpi100.png')
     img = ImageTk.PhotoImage(wifi_img)
     window.img = img  # to prevent the image garbage collected.
     canvas.create_image(200, 180, anchor='center', image=img)  # 设置生成的图片位置
@@ -264,7 +264,7 @@ def introduction():  # 软件介绍函数
 
 
 def update_message():  # 软件更新说明函数
-    tm.showinfo(title='更新说明', message='V1.3版本增强了对不同数据格式的兼容性，插值方法修改为克里金插值')
+    tm.showinfo(title='更新说明', message='V1.5版本增强了对不同数据格式的兼容性，插值方法修改为克里金插值，提升了图片分辨率')
 
 
 if __name__ == '__main__':
