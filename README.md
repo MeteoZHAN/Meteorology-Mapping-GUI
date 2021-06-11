@@ -1,4 +1,4 @@
-# Meteorology-Mapping-App
+# Meteorology-Mapping-GUI
 
 pyinstaller 打包py文件即可生成.exe文件
 
@@ -13,3 +13,5 @@ temp.txt为测试文件
 4. 增加了负号显示功能
 ## 2021.06.05 Updated to V1.4
 简化色阶级数选择操作
+## 2021.06.11 Updated to V1.5
+提高图像分辨率为300dpi
