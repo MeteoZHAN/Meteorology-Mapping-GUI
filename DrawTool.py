@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Updated on 2021.06.11
+Updated on 2021.08.07
 @author: ZhanLF
 """
 
 import tkinter as tk
 from tkinter import filedialog, ttk
 import tkinter.messagebox as tm
+from tkinter.colorchooser import *
 import matplotlib.pyplot as plt
 from matplotlib.path import Path
 from matplotlib.patches import PathPatch
@@ -27,7 +28,7 @@ plt.rcParams['font.sans-serif'] = ['STSong']  # 用来正常显示中文字符
 plt.rcParams['axes.unicode_minus'] = False  # 正常显示负号
 
 window = tk.Tk()
-window.title('江西省气象空间插值绘图软件 V1.5')
+window.title('江西省气象空间插值绘图软件 V3.0')
 window.geometry('800x400+400+200')
 window.minsize(800, 400)
 menubar = tk.Menu(window)
@@ -74,10 +75,9 @@ def color_levels(*args):
     if btn_sectlevels.get() == '默认':
         mark1_1 = 0
         mnum_1 = None
-
     else:
         mark1_1 = 1
-        mnum_1 = int(btn_sectlevels.get()) + 1
+        mnum_1 = int(btn_sectlevels.get())  # +1去掉了
     return mark1_1, mnum_1, markclick
 
 
@@ -102,8 +102,71 @@ def docopy(*args):
     paste_img('pics_dpi300.png')
 
 
+rgb = [None] * 10
+
+
+def sect_color1():
+    color = askcolor(title='选择颜色')
+    name_canvas[1].config(bg=color[1])
+    rgb[0] = color[1]
+
+
+def sect_color2():
+    color = askcolor(title='选择颜色')
+    name_canvas[2].config(bg=color[1])
+    rgb[1] = color[1]
+
+
+def sect_color3():
+    color = askcolor(title='选择颜色')
+    name_canvas[3].config(bg=color[1])
+    rgb[2] = color[1]
+
+
+def sect_color4():
+    color = askcolor(title='选择颜色')
+    name_canvas[4].config(bg=color[1])
+    rgb[3] = color[1]
+
+
+def sect_color5():
+    color = askcolor(title='选择颜色')
+    name_canvas[5].config(bg=color[1])
+    rgb[4] = color[1]
+
+
+def sect_color6():
+    color = askcolor(title='选择颜色')
+    name_canvas[6].config(bg=color[1])
+    rgb[5] = color[1]
+
+
+def sect_color7():
+    color = askcolor(title='选择颜色')
+    name_canvas[7].config(bg=color[1])
+    rgb[6] = color[1]
+
+
+def sect_color8():
+    color = askcolor(title='选择颜色')
+    name_canvas[8].config(bg=color[1])
+    rgb[7] = color[1]
+
+
+def sect_color9():
+    color = askcolor(title='选择颜色')
+    name_canvas[9].config(bg=color[1])
+    rgb[8] = color[1]
+
+
+def sect_color10():
+    color = askcolor(title='选择颜色')
+    name_canvas[10].config(bg=color[1])
+    rgb[9] = color[1]
+
+
 def selected_cmap(*args):
-    global color_mark
+    global color_mark, name_canvas
     if btn_style.get() == 'jet':
         color_mark = 1
     elif btn_style.get() == 'rainbow':
@@ -114,6 +177,64 @@ def selected_cmap(*args):
         color_mark = 4
     elif btn_style.get() == 'CMA_Rain':
         color_mark = 5
+    elif btn_style.get() == '自定义...':
+        color_mark = 6
+        colorsetting = tk.Tk()  # 导入tkinter中的tk模块
+        colorsetting.title('颜色设置')
+        colorsetting.geometry('300x550+1300+100')
+        name_button = dict()
+        name_canvas = dict()
+        i = 1
+        name_button[i] = tk.Button(colorsetting, text='第' + str(i) + '级颜色:', command=sect_color1)
+        name_button[i].place(relx=40 / 300, rely=(i * 50 - 30) / 550, relwidth=0.3, relheight=0.08)
+        name_canvas[i] = tk.Canvas(colorsetting, bg='white')
+        name_canvas[i].place(relx=160 / 300, rely=(i * 50 - 30) / 550, relwidth=0.25, relheight=0.08)
+        i = 2
+        name_button[i] = tk.Button(colorsetting, text='第' + str(i) + '级颜色:', command=sect_color2)
+        name_button[i].place(relx=40 / 300, rely=(i * 50 - 30) / 550, relwidth=0.3, relheight=0.08)
+        name_canvas[i] = tk.Canvas(colorsetting, bg='white')
+        name_canvas[i].place(relx=160 / 300, rely=(i * 50 - 30) / 550, relwidth=0.25, relheight=0.08)
+        i = 3
+        name_button[i] = tk.Button(colorsetting, text='第' + str(i) + '级颜色:', command=sect_color3)
+        name_button[i].place(relx=40 / 300, rely=(i * 50 - 30) / 550, relwidth=0.3, relheight=0.08)
+        name_canvas[i] = tk.Canvas(colorsetting, bg='white')
+        name_canvas[i].place(relx=160 / 300, rely=(i * 50 - 30) / 550, relwidth=0.25, relheight=0.08)
+        i = 4
+        name_button[i] = tk.Button(colorsetting, text='第' + str(i) + '级颜色:', command=sect_color4)
+        name_button[i].place(relx=40 / 300, rely=(i * 50 - 30) / 550, relwidth=0.3, relheight=0.08)
+        name_canvas[i] = tk.Canvas(colorsetting, bg='white')
+        name_canvas[i].place(relx=160 / 300, rely=(i * 50 - 30) / 550, relwidth=0.25, relheight=0.08)
+        i = 5
+        name_button[i] = tk.Button(colorsetting, text='第' + str(i) + '级颜色:', command=sect_color5)
+        name_button[i].place(relx=40 / 300, rely=(i * 50 - 30) / 550, relwidth=0.3, relheight=0.08)
+        name_canvas[i] = tk.Canvas(colorsetting, bg='white')
+        name_canvas[i].place(relx=160 / 300, rely=(i * 50 - 30) / 550, relwidth=0.25, relheight=0.08)
+        i = 6
+        name_button[i] = tk.Button(colorsetting, text='第' + str(i) + '级颜色:', command=sect_color6)
+        name_button[i].place(relx=40 / 300, rely=(i * 50 - 30) / 550, relwidth=0.3, relheight=0.08)
+        name_canvas[i] = tk.Canvas(colorsetting, bg='white')
+        name_canvas[i].place(relx=160 / 300, rely=(i * 50 - 30) / 550, relwidth=0.25, relheight=0.08)
+        i = 7
+        name_button[i] = tk.Button(colorsetting, text='第' + str(i) + '级颜色:', command=sect_color7)
+        name_button[i].place(relx=40 / 300, rely=(i * 50 - 30) / 550, relwidth=0.3, relheight=0.08)
+        name_canvas[i] = tk.Canvas(colorsetting, bg='white')
+        name_canvas[i].place(relx=160 / 300, rely=(i * 50 - 30) / 550, relwidth=0.25, relheight=0.08)
+        i = 8
+        name_button[i] = tk.Button(colorsetting, text='第' + str(i) + '级颜色:', command=sect_color8)
+        name_button[i].place(relx=40 / 300, rely=(i * 50 - 30) / 550, relwidth=0.3, relheight=0.08)
+        name_canvas[i] = tk.Canvas(colorsetting, bg='white')
+        name_canvas[i].place(relx=160 / 300, rely=(i * 50 - 30) / 550, relwidth=0.25, relheight=0.08)
+        i = 9
+        name_button[i] = tk.Button(colorsetting, text='第' + str(i) + '级颜色:', command=sect_color9)
+        name_button[i].place(relx=40 / 300, rely=(i * 50 - 30) / 550, relwidth=0.3, relheight=0.08)
+        name_canvas[i] = tk.Canvas(colorsetting, bg='white')
+        name_canvas[i].place(relx=160 / 300, rely=(i * 50 - 30) / 550, relwidth=0.25, relheight=0.08)
+        i = 10
+        name_button[i] = tk.Button(colorsetting, text='第' + str(i) + '级颜色:', command=sect_color10)
+        name_button[i].place(relx=40 / 300, rely=(i * 50 - 30) / 550, relwidth=0.3, relheight=0.08)
+        name_canvas[i] = tk.Canvas(colorsetting, bg='white')
+        name_canvas[i].place(relx=160 / 300, rely=(i * 50 - 30) / 550, relwidth=0.25, relheight=0.08)
+
     return color_mark
 
 
@@ -136,9 +257,13 @@ def draw_function():
     else:
         mark3 = 1
         mmax = float(btn_legendmax.get())
+        if mmax <= mmin:
+            tm.showwarning('警告', '图例最大值应大于最小值！')
 
     # ------------警告提示框---------
-    if mark1 == 0 and mark2 == 0 and mark3 == 0:
+    if (mark1 == 0 or mark1 == 1) and mark2 == 0 and mark3 == 0:
+        pass
+    elif color_mark == 6:
         pass
     elif mark1 == 0 and (mark2 == 1 or mark3 == 1):
         tm.showwarning('警告', '色阶级数默认情况下，图例最小值和图例最大值均应为“默认”。')
@@ -193,7 +318,6 @@ def draw_function():
             pic = plt.contourf(olon, olat, oz, v, cmap=plt.cm.gist_rainbow)
         elif color_mark == 4:
             pic = plt.contourf(olon, olat, oz, v, cmap=plt.cm.OrRd)
-
     elif btn_style.get() == 'CMA_Rain':
         # 应加入超出levels的提示
         try:
@@ -214,13 +338,41 @@ def draw_function():
         # cbar.ax.set_xlabel(btn9.get(),fontproperties='SimHei')
     else:
         if color_mark == 1:
-            pic = plt.contourf(olon, olat, oz, cmap=plt.cm.jet)
+            if mark1 == 0:  # 未设置级数
+                pic = plt.contourf(olon, olat, oz, cmap=plt.cm.jet)
+            else:
+                pic = plt.contourf(olon, olat, oz, mnum, cmap=plt.cm.jet)
         elif color_mark == 2:
-            pic = plt.contourf(olon, olat, oz, cmap=plt.cm.rainbow)
+            if mark1 == 0:
+                pic = plt.contourf(olon, olat, oz, cmap=plt.cm.rainbow)
+            else:
+                pic = plt.contourf(olon, olat, oz, mnum, cmap=plt.cm.rainbow)
         elif color_mark == 3:
-            pic = plt.contourf(olon, olat, oz, cmap=plt.cm.gist_rainbow)
+            if mark1 == 0:
+                pic = plt.contourf(olon, olat, oz, cmap=plt.cm.gist_rainbow)
+            else:
+                pic = plt.contourf(olon, olat, oz, mnum, cmap=plt.cm.gist_rainbow)
         elif color_mark == 4:
-            pic = plt.contourf(olon, olat, oz, cmap=plt.cm.OrRd)
+            if mark1 == 0:
+                pic = plt.contourf(olon, olat, oz, cmap=plt.cm.OrRd)
+            else:
+                pic = plt.contourf(olon, olat, oz, mnum, cmap=plt.cm.OrRd)
+        elif color_mark == 6:  # 自定义颜色
+            # 判断出自定义颜色级数
+            jishu_colors = []
+            for index, r in enumerate(rgb):
+                if r == None:
+                    num_color = index
+                    break
+                else:
+                    jishu_colors.append(r)
+
+            if mark2 == 1 and mark3 == 1:
+                v = np.linspace(mmin, mmax, num=num_color + 1, endpoint=True)  # 设置显示数值范围和级数
+                pic = plt.contourf(olon, olat, oz, v, colors=jishu_colors)
+            else:
+                pic = plt.contourf(olon, olat, oz, len(jishu_colors) - 1, colors=jishu_colors)
+
         # cbar = plt.colorbar(pic)
         # cbar.set_label(btn9.get(),fontproperties='SimHei') #图例label在右边
 
@@ -264,7 +416,11 @@ def introduction():  # 软件介绍函数
 
 
 def update_message():  # 软件更新说明函数
-    tm.showinfo(title='更新说明', message='V1.5版本增强了对不同数据格式的兼容性，插值方法修改为克里金插值，提升了图片分辨率')
+    tm.showinfo(title='更新说明', message='V3.0版本更新说明：\n'
+                                      '增强了对不同数据格式的兼容性；\n'
+                                      '插值方法修改为克里金插值；\n'
+                                      '提升了图片分辨率；\n'
+                                      '增加了自定义各级颜色功能')
 
 
 if __name__ == '__main__':
@@ -337,7 +493,7 @@ if __name__ == '__main__':
     text6.place(relx=30 / 800, rely=580 / 800)
     btn_style = ttk.Combobox(window, state='readonly')
     btn_style.place(relx=140 / 800, rely=580 / 800, relwidth=0.1)
-    btn_style['value'] = ('请选择...', 'CMA_Rain', 'jet', 'rainbow', 'gist_rainbow', 'OrRd')
+    btn_style['value'] = ('请选择...', 'CMA_Rain', 'jet', 'rainbow', 'gist_rainbow', 'OrRd', '自定义...')
     btn_style.current(0)  # 默认值
     btn_style.bind("<<ComboboxSelected>>", selected_cmap)
 
