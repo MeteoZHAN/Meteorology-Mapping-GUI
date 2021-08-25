@@ -2,6 +2,7 @@
 """
 Updated on 2021.08.07
 @author: ZhanLF
+
 """
 
 import tkinter as tk
@@ -28,7 +29,7 @@ plt.rcParams['font.sans-serif'] = ['STSong']  # 用来正常显示中文字符
 plt.rcParams['axes.unicode_minus'] = False  # 正常显示负号
 
 window = tk.Tk()
-window.title('江西省气象空间插值绘图软件 V3.0')
+window.title('江西省气象空间插值绘图软件 V3.1')
 window.geometry('800x400+400+200')
 window.minsize(800, 400)
 menubar = tk.Menu(window)
@@ -77,7 +78,7 @@ def color_levels(*args):
         mnum_1 = None
     else:
         mark1_1 = 1
-        mnum_1 = int(btn_sectlevels.get())  # +1去掉了
+        mnum_1 = int(btn_sectlevels.get()) + 1
     return mark1_1, mnum_1, markclick
 
 
@@ -102,9 +103,7 @@ def docopy(*args):
     paste_img('pics_dpi300.png')
 
 
-rgb = [None] * 10
-
-
+# ----------实现自定义色块功能----------------
 def sect_color1():
     color = askcolor(title='选择颜色')
     name_canvas[1].config(bg=color[1])
@@ -166,7 +165,7 @@ def sect_color10():
 
 
 def selected_cmap(*args):
-    global color_mark, name_canvas
+    global color_mark, name_canvas, rgb
     if btn_style.get() == 'jet':
         color_mark = 1
     elif btn_style.get() == 'rainbow':
@@ -178,6 +177,7 @@ def selected_cmap(*args):
     elif btn_style.get() == 'CMA_Rain':
         color_mark = 5
     elif btn_style.get() == '自定义...':
+        rgb = [None] * 10
         color_mark = 6
         colorsetting = tk.Tk()  # 导入tkinter中的tk模块
         colorsetting.title('颜色设置')
@@ -234,8 +234,6 @@ def selected_cmap(*args):
         name_button[i].place(relx=40 / 300, rely=(i * 50 - 30) / 550, relwidth=0.3, relheight=0.08)
         name_canvas[i] = tk.Canvas(colorsetting, bg='white')
         name_canvas[i].place(relx=160 / 300, rely=(i * 50 - 30) / 550, relwidth=0.25, relheight=0.08)
-
-    return color_mark
 
 
 def draw_function():
@@ -341,22 +339,26 @@ def draw_function():
             if mark1 == 0:  # 未设置级数
                 pic = plt.contourf(olon, olat, oz, cmap=plt.cm.jet)
             else:
-                pic = plt.contourf(olon, olat, oz, mnum, cmap=plt.cm.jet)
+                v = np.linspace(np.min(oz), np.max(oz), num=mnum, endpoint=True)  # 设置显示数值范围和级数
+                pic = plt.contourf(olon, olat, oz, v, cmap=plt.cm.jet)
         elif color_mark == 2:
             if mark1 == 0:
                 pic = plt.contourf(olon, olat, oz, cmap=plt.cm.rainbow)
             else:
-                pic = plt.contourf(olon, olat, oz, mnum, cmap=plt.cm.rainbow)
+                v = np.linspace(np.min(oz), np.max(oz), num=mnum, endpoint=True)
+                pic = plt.contourf(olon, olat, oz, v, cmap=plt.cm.rainbow)
         elif color_mark == 3:
             if mark1 == 0:
                 pic = plt.contourf(olon, olat, oz, cmap=plt.cm.gist_rainbow)
             else:
-                pic = plt.contourf(olon, olat, oz, mnum, cmap=plt.cm.gist_rainbow)
+                v = np.linspace(np.min(oz), np.max(oz), num=mnum, endpoint=True)
+                pic = plt.contourf(olon, olat, oz, v, cmap=plt.cm.gist_rainbow)
         elif color_mark == 4:
             if mark1 == 0:
                 pic = plt.contourf(olon, olat, oz, cmap=plt.cm.OrRd)
             else:
-                pic = plt.contourf(olon, olat, oz, mnum, cmap=plt.cm.OrRd)
+                v = np.linspace(np.min(oz), np.max(oz), num=mnum, endpoint=True)
+                pic = plt.contourf(olon, olat, oz, v, cmap=plt.cm.OrRd)
         elif color_mark == 6:  # 自定义颜色
             # 判断出自定义颜色级数
             jishu_colors = []
@@ -367,14 +369,12 @@ def draw_function():
                 else:
                     jishu_colors.append(r)
 
-            if mark2 == 1 and mark3 == 1:
+            if mark2 == 1 and mark3 == 1:  # mark2最小值；mark3最大值
                 v = np.linspace(mmin, mmax, num=num_color + 1, endpoint=True)  # 设置显示数值范围和级数
                 pic = plt.contourf(olon, olat, oz, v, colors=jishu_colors)
             else:
-                pic = plt.contourf(olon, olat, oz, len(jishu_colors) - 1, colors=jishu_colors)
-
-        # cbar = plt.colorbar(pic)
-        # cbar.set_label(btn9.get(),fontproperties='SimHei') #图例label在右边
+                v = np.linspace(np.min(oz), np.max(oz), num=len(jishu_colors) + 1, endpoint=True)
+                pic = plt.contourf(olon, olat, oz, v, colors=jishu_colors)
 
     for collection in pic.collections:
         collection.set_clip_path(patch)  # 设置显示区域
@@ -500,8 +500,6 @@ if __name__ == '__main__':
     # 画布设置
     canvas = tk.Canvas(window, bg='white')
     canvas.place(relx=300 / 800, rely=20 / 400, relwidth=0.5, relheight=0.9)
-    # canvas.bind("<Button-3>", docopy)
-
     menucopy = tk.Menu(window, tearoff=0)
     menucopy.add_command(label="复制", command=docopy)
 
@@ -510,6 +508,5 @@ if __name__ == '__main__':
         menucopy.post(event.x_root, event.y_root)
 
 
-    canvas.bind("<Button-3>", popupmenu)
-
+    canvas.bind("<Button-3>", popupmenu)  # 绑定鼠标右键
     window.mainloop()
